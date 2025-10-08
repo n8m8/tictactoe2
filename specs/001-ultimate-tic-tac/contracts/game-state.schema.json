@@ -1,0 +1,303 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tictactoe2.example.com/schemas/game-state.json",
+  "title": "Ultimate Tic Tac Toe Game State",
+  "description": "JSON schema for game state synchronization over WebRTC",
+  "definitions": {
+    "CellState": {
+      "type": ["string", "null"],
+      "enum": ["X", "O", "draw", null],
+      "description": "State of a single cell or mini-game"
+    },
+    "Player": {
+      "type": "string",
+      "enum": ["X", "O"],
+      "description": "Player identifier"
+    },
+    "GamePhase": {
+      "type": "string",
+      "enum": ["waiting", "playing", "ended"],
+      "description": "Current phase of the game"
+    },
+    "MoveResult": {
+      "type": "string",
+      "enum": ["continue", "mini-win", "mini-draw", "game-win", "game-draw"],
+      "description": "Outcome of a move"
+    },
+    "MiniGame": {
+      "type": "object",
+      "required": ["position", "cells", "winner", "isComplete"],
+      "properties": {
+        "position": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8,
+          "description": "Position on main board (0-8)"
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CellState"
+          },
+          "minItems": 9,
+          "maxItems": 9,
+          "description": "3x3 grid of cell states"
+        },
+        "winner": {
+          "oneOf": [
+            { "$ref": "#/definitions/Player" },
+            { "type": "string", "enum": ["draw"] },
+            { "type": "null" }
+          ],
+          "description": "Winner of this mini-game"
+        },
+        "isComplete": {
+          "type": "boolean",
+          "description": "Whether this mini-game has ended"
+        }
+      }
+    },
+    "MainBoard": {
+      "type": "object",
+      "required": ["miniGames", "state"],
+      "properties": {
+        "miniGames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MiniGame"
+          },
+          "minItems": 9,
+          "maxItems": 9,
+          "description": "Array of 9 mini-games"
+        },
+        "state": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CellState"
+          },
+          "minItems": 9,
+          "maxItems": 9,
+          "description": "Derived state showing mini-game winners on main board"
+        }
+      }
+    },
+    "Move": {
+      "type": "object",
+      "required": ["seq", "player", "miniGameIndex", "cellIndex", "timestamp", "resultingState"],
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Sequential move number"
+        },
+        "player": {
+          "$ref": "#/definitions/Player"
+        },
+        "miniGameIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8,
+          "description": "Which mini-game (0-8)"
+        },
+        "cellIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8,
+          "description": "Which cell within mini-game (0-8)"
+        },
+        "timestamp": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unix timestamp in milliseconds"
+        },
+        "resultingState": {
+          "$ref": "#/definitions/MoveResult"
+        }
+      }
+    },
+    "Game": {
+      "type": "object",
+      "required": ["gameId", "sessionId", "mainBoard", "currentTurn", "startingPlayer", "gamePhase", "winner", "moveHistory", "startedAt", "endedAt"],
+      "properties": {
+        "gameId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique game identifier"
+        },
+        "sessionId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Parent session identifier"
+        },
+        "mainBoard": {
+          "$ref": "#/definitions/MainBoard"
+        },
+        "currentTurn": {
+          "$ref": "#/definitions/Player"
+        },
+        "startingPlayer": {
+          "$ref": "#/definitions/Player",
+          "description": "Who started this game (alternates each match)"
+        },
+        "gamePhase": {
+          "$ref": "#/definitions/GamePhase"
+        },
+        "winner": {
+          "oneOf": [
+            { "$ref": "#/definitions/Player" },
+            { "type": "string", "enum": ["draw"] },
+            { "type": "null" }
+          ]
+        },
+        "moveHistory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Move"
+          },
+          "description": "Sequential list of all moves"
+        },
+        "startedAt": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Game start timestamp (ms)"
+        },
+        "endedAt": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "Game end timestamp (ms), null if ongoing"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "oneOf": [
+    {
+      "title": "Move Message",
+      "description": "Player makes a move",
+      "required": ["type", "seq", "player", "miniGameIndex", "cellIndex", "timestamp", "resultingState"],
+      "properties": {
+        "type": {
+          "const": "move"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "player": {
+          "$ref": "#/definitions/Player"
+        },
+        "miniGameIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "cellIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "timestamp": {
+          "type": "integer"
+        },
+        "resultingState": {
+          "$ref": "#/definitions/MoveResult"
+        }
+      }
+    },
+    {
+      "title": "Sync Request",
+      "description": "Request full game state (after reconnect or desync)",
+      "required": ["type", "lastSeq"],
+      "properties": {
+        "type": {
+          "const": "sync_request"
+        },
+        "lastSeq": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Last move sequence number client has"
+        }
+      }
+    },
+    {
+      "title": "Sync Response",
+      "description": "Full game state sync",
+      "required": ["type", "game"],
+      "properties": {
+        "type": {
+          "const": "sync_response"
+        },
+        "game": {
+          "$ref": "#/definitions/Game"
+        }
+      }
+    },
+    {
+      "title": "Rematch Request",
+      "description": "Player requests a rematch",
+      "required": ["type", "player"],
+      "properties": {
+        "type": {
+          "const": "rematch_request"
+        },
+        "player": {
+          "$ref": "#/definitions/Player"
+        }
+      }
+    },
+    {
+      "title": "Rematch Accept",
+      "description": "Player accepts rematch",
+      "required": ["type", "player"],
+      "properties": {
+        "type": {
+          "const": "rematch_accept"
+        },
+        "player": {
+          "$ref": "#/definitions/Player"
+        }
+      }
+    },
+    {
+      "title": "Ping",
+      "description": "Latency measurement ping",
+      "required": ["type", "timestamp"],
+      "properties": {
+        "type": {
+          "const": "ping"
+        },
+        "timestamp": {
+          "type": "integer",
+          "description": "Sender's timestamp (ms)"
+        }
+      }
+    },
+    {
+      "title": "Pong",
+      "description": "Latency measurement response",
+      "required": ["type", "timestamp"],
+      "properties": {
+        "type": {
+          "const": "pong"
+        },
+        "timestamp": {
+          "type": "integer",
+          "description": "Original ping timestamp (ms)"
+        }
+      }
+    },
+    {
+      "title": "Player Disconnect",
+      "description": "Notify peer of intentional disconnect",
+      "required": ["type", "player"],
+      "properties": {
+        "type": {
+          "const": "disconnect"
+        },
+        "player": {
+          "$ref": "#/definitions/Player"
+        }
+      }
+    }
+  ]
+}

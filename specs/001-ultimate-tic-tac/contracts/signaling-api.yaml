@@ -1,0 +1,353 @@
+openapi: 3.0.3
+info:
+  title: Ultimate Tic Tac Toe Signaling API
+  description: WebRTC signaling endpoints for P2P game connection setup
+  version: 1.0.0
+  contact:
+    name: TicTacToe2 Project
+
+servers:
+  - url: /api/signaling
+    description: Serverless functions (Vercel/Netlify)
+
+paths:
+  /create-room:
+    post:
+      summary: Create a new game room
+      description: Host creates a room and receives a join code for guests
+      operationId: createRoom
+      tags:
+        - Signaling
+      responses:
+        '200':
+          description: Room created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - sessionId
+                  - hostToken
+                  - joinCode
+                properties:
+                  sessionId:
+                    type: string
+                    format: uuid
+                    description: Unique session identifier
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+                  hostToken:
+                    type: string
+                    format: uuid
+                    description: Authentication token for host
+                    example: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+                  joinCode:
+                    type: string
+                    pattern: '^[A-Z0-9]{6}$'
+                    description: 6-character code for guests to join
+                    example: "A3K9Z2"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /join-room:
+    post:
+      summary: Join an existing room
+      description: Guest joins a room using the host's join code
+      operationId: joinRoom
+      tags:
+        - Signaling
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - joinCode
+              properties:
+                joinCode:
+                  type: string
+                  pattern: '^[A-Z0-9]{6}$'
+                  description: Join code provided by host
+                  example: "A3K9Z2"
+      responses:
+        '200':
+          description: Successfully joined room
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - sessionId
+                  - guestToken
+                  - hostOffer
+                properties:
+                  sessionId:
+                    type: string
+                    format: uuid
+                    description: Session identifier
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+                  guestToken:
+                    type: string
+                    format: uuid
+                    description: Authentication token for guest
+                    example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  hostOffer:
+                    $ref: '#/components/schemas/WebRTCOffer'
+                    description: Host's WebRTC offer (if available)
+                    nullable: true
+        '404':
+          description: Room not found or join code invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid join code"
+                code: "ROOM_NOT_FOUND"
+        '409':
+          description: Room already full (2 players max)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Room is full"
+                code: "ROOM_FULL"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /signal:
+    post:
+      summary: Exchange WebRTC signaling data
+      description: Send offer, answer, or ICE candidates to establish P2P connection
+      operationId: sendSignal
+      tags:
+        - Signaling
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+                - token
+                - type
+                - signal
+              properties:
+                sessionId:
+                  type: string
+                  format: uuid
+                  description: Session identifier
+                token:
+                  type: string
+                  format: uuid
+                  description: Host or guest authentication token
+                type:
+                  type: string
+                  enum: [offer, answer, ice-candidate]
+                  description: Type of signaling data
+                signal:
+                  oneOf:
+                    - $ref: '#/components/schemas/WebRTCOffer'
+                    - $ref: '#/components/schemas/WebRTCAnswer'
+                    - $ref: '#/components/schemas/ICECandidate'
+      responses:
+        '200':
+          description: Signal stored successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid authentication token"
+                code: "UNAUTHORIZED"
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Session not found"
+                code: "SESSION_NOT_FOUND"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /poll:
+    get:
+      summary: Poll for signaling messages
+      description: Retrieve pending WebRTC signals for this session
+      operationId: pollSignals
+      tags:
+        - Signaling
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Session identifier
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Host or guest authentication token
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Unix timestamp (ms) - only return signals after this time
+      responses:
+        '200':
+          description: Signals retrieved successfully (may be empty array)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  signals:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SignalingMessage'
+                  timestamp:
+                    type: integer
+                    format: int64
+                    description: Server timestamp for next poll
+                    example: 1709856123456
+        '401':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    WebRTCOffer:
+      type: object
+      required:
+        - type
+        - sdp
+      properties:
+        type:
+          type: string
+          enum: [offer]
+        sdp:
+          type: string
+          description: Session Description Protocol data
+          example: "v=0\r\no=- 123456789 2 IN IP4 127.0.0.1\r\n..."
+
+    WebRTCAnswer:
+      type: object
+      required:
+        - type
+        - sdp
+      properties:
+        type:
+          type: string
+          enum: [answer]
+        sdp:
+          type: string
+          description: Session Description Protocol data
+
+    ICECandidate:
+      type: object
+      required:
+        - candidate
+        - sdpMLineIndex
+        - sdpMid
+      properties:
+        candidate:
+          type: string
+          description: ICE candidate string
+          example: "candidate:1 1 UDP 2130706431 192.168.1.100 54321 typ host"
+        sdpMLineIndex:
+          type: integer
+          description: Media line index
+          example: 0
+        sdpMid:
+          type: string
+          description: Media stream ID
+          example: "0"
+
+    SignalingMessage:
+      type: object
+      required:
+        - type
+        - signal
+        - timestamp
+      properties:
+        type:
+          type: string
+          enum: [offer, answer, ice-candidate]
+        signal:
+          oneOf:
+            - $ref: '#/components/schemas/WebRTCOffer'
+            - $ref: '#/components/schemas/WebRTCAnswer'
+            - $ref: '#/components/schemas/ICECandidate'
+        timestamp:
+          type: integer
+          format: int64
+          description: Unix timestamp (ms) when signal was sent
+          example: 1709856123456
+
+    Error:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: "Invalid join code"
+        code:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - ROOM_NOT_FOUND
+            - ROOM_FULL
+            - UNAUTHORIZED
+            - SESSION_NOT_FOUND
+            - INVALID_INPUT
+            - SERVER_ERROR
+          example: "ROOM_NOT_FOUND"
+
+  responses:
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "An unexpected error occurred"
+            code: "SERVER_ERROR"
+
+tags:
+  - name: Signaling
+    description: WebRTC signaling operations for P2P connection setup
