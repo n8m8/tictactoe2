@@ -62,14 +62,16 @@ export default function SinglePlayerPage() {
       return
     }
 
-    if (
-      !isValidMove(
-        gameState.mainBoard,
-        miniGameIndex,
-        cellIndex,
-        gameState.currentTurn
-      )
-    ) {
+    const moveValidation = isValidMove(gameState, {
+      seq: gameState.moveHistory.length + 1,
+      player: myPlayer,
+      miniGameIndex: miniGameIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
+      cellIndex: cellIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
+      timestamp: Date.now(),
+      resultingState: 'continue',
+    })
+
+    if (!moveValidation.valid) {
       return
     }
 

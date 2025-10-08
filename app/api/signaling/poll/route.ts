@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { PollRequest, PollResponse } from '@/types/signaling'
-import { rooms } from '../create-room/route'
+import { rooms } from '@/lib/signaling-storage'
 
 export async function POST(request: NextRequest) {
   try {

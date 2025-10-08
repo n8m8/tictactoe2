@@ -1,5 +1,5 @@
 import type { MainBoard, Player, CellState } from '@/types/game'
-import { checkMiniGameWin, isValidMove } from './game-rules'
+import { checkMiniGameWin } from './game-rules'
 
 export type AIDifficulty = 'easy' | 'medium' | 'hard'
 
@@ -107,7 +107,8 @@ export class AIOpponent {
     for (const miniGameIndex of miniGamesToCheck) {
       const miniGame = miniGames[miniGameIndex]
       for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
-        if (isValidMove(mainBoard, miniGameIndex, cellIndex, this.player)) {
+        // Check if cell is empty
+        if (miniGame.cells[cellIndex] === null && !miniGame.isComplete) {
           moves.push({ miniGameIndex, cellIndex })
         }
       }

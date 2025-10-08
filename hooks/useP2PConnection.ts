@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { P2PConnection, ConnectionStatus } from '@/lib/p2p-connection'
-import type { P2PMessage, GameAction } from '@/types/signaling'
+import type { P2PMessage } from '@/types/signaling'
+import type { GameAction } from '@/types/game'
 
 export interface UseP2PConnectionParams {
   isHost: boolean

@@ -44,8 +44,8 @@ export default function GamePage() {
       if (message.type === 'game-action') {
         dispatch(message.action)
       } else if (message.type === 'chat') {
-        // TODO: Handle chat messages (Phase 8)
-        console.log('Chat message:', message.text)
+        // TODO: Handle chat messages in future version
+        // Chat functionality not yet implemented
       }
     },
     [dispatch]
@@ -73,14 +73,16 @@ export default function GamePage() {
     }
 
     // Validate move
-    if (
-      !isValidMove(
-        gameState.mainBoard,
-        miniGameIndex,
-        cellIndex,
-        gameState.currentTurn
-      )
-    ) {
+    const moveValidation = isValidMove(gameState, {
+      seq: gameState.moveHistory.length + 1,
+      player: myPlayer,
+      miniGameIndex: miniGameIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
+      cellIndex: cellIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
+      timestamp: Date.now(),
+      resultingState: 'continue',
+    })
+
+    if (!moveValidation.valid) {
       return
     }
 

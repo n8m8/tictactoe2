@@ -1,27 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { CreateRoomRequest, CreateRoomResponse } from '@/types/signaling'
-
-// In-memory storage for rooms (replace with Redis/DB in production)
-const rooms = new Map<
-  string,
-  {
-    hostPeerId: string
-    guestPeerId?: string
-    signals: Array<{ from: string; signal: any }>
-    createdAt: number
-  }
->()
-
-// Clean up old rooms (older than 1 hour)
-setInterval(() => {
-  const now = Date.now()
-  const oneHour = 60 * 60 * 1000
-  for (const [code, room] of rooms.entries()) {
-    if (now - room.createdAt > oneHour) {
-      rooms.delete(code)
-    }
-  }
-}, 5 * 60 * 1000) // Run every 5 minutes
+import { rooms } from '@/lib/signaling-storage'
 
 function generateJoinCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Exclude similar chars
@@ -70,6 +49,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-// Export rooms for other routes to access
-export { rooms }

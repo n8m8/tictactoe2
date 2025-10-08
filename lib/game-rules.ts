@@ -119,6 +119,7 @@ export function createEmptyMainBoard(): MainBoard {
   return {
     miniGames: Array.from({ length: 9 }, (_, i) => createEmptyMiniGame(i)),
     state: Array(9).fill(null),
+    activeMiniGame: null, // First move can be anywhere
   }
 }
 

@@ -1,0 +1,1 @@
+self.__NEXT_FONT_MANIFEST='{"pages":{},"app":{"/Users/n8m8/yvette/projects/tictactoe2/app/layout":["static/media/46bdd75a3ff56824-s.p.woff2","static/media/09f7b6b7f4b56175-s.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}';

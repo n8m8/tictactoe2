@@ -1,5 +1,6 @@
 import SimplePeer from 'simple-peer'
-import type { P2PMessage, GameAction } from '@/types/signaling'
+import type { P2PMessage } from '@/types/signaling'
+import type { GameAction } from '@/types/game'
 import { SignalingClient } from './signaling-client'
 
 export type ConnectionStatus =

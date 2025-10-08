@@ -26,17 +26,38 @@ export interface SignalingMessage {
   timestamp: number
 }
 
+// API request types
+export interface CreateRoomRequest {
+  hostPeerId: string
+}
+
+export interface JoinRoomRequest {
+  joinCode: string
+  guestPeerId: string
+}
+
+export interface SignalRequest {
+  joinCode: string
+  from: string
+  signal: any
+}
+
+export interface PollRequest {
+  joinCode: string
+  peerId: string
+  lastSeq?: number
+}
+
 // API response types
 export interface CreateRoomResponse {
-  sessionId: string
-  hostToken: string
   joinCode: string
+  hostPeerId: string
 }
 
 export interface JoinRoomResponse {
-  sessionId: string
-  guestToken: string
-  hostOffer: WebRTCOffer | null
+  joinCode: string
+  hostPeerId: string
+  guestPeerId: string
 }
 
 export interface SignalResponse {
@@ -44,17 +65,11 @@ export interface SignalResponse {
 }
 
 export interface PollResponse {
-  signals: SignalingMessage[]
-  timestamp: number
+  signals: any[]
+  guestJoined: boolean
 }
 
 // P2P message types
 export type P2PMessage =
-  | { type: 'move'; seq: number; player: 'X' | 'O'; miniGameIndex: number; cellIndex: number; timestamp: number; resultingState: string }
-  | { type: 'sync_request'; lastSeq: number }
-  | { type: 'sync_response'; game: any }
-  | { type: 'rematch_request'; player: 'X' | 'O' }
-  | { type: 'rematch_accept'; player: 'X' | 'O' }
-  | { type: 'ping'; timestamp: number }
-  | { type: 'pong'; timestamp: number }
-  | { type: 'disconnect'; player: 'X' | 'O' }
+  | { type: 'game-action'; action: import('@/types/game').GameAction; timestamp: number }
+  | { type: 'chat'; text: string; timestamp: number }

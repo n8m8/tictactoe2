@@ -20,6 +20,7 @@ export interface MiniGame {
 export interface MainBoard {
   miniGames: MiniGame[]
   state: CellState[] // Derived from miniGames winners
+  activeMiniGame: number | null // Index of mini-game that must be played next (null = any available)
 }
 
 export interface Move {

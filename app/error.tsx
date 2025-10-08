@@ -25,7 +25,7 @@ export default function Error({
             Something Went Wrong
           </h2>
           <p className="text-lg font-handwritten text-whiteboard-marker-black/70">
-            Don't worry, even the best players make mistakes.
+            Don&apos;t worry, even the best players make mistakes.
           </p>
         </div>
 

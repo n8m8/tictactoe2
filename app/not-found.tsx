@@ -13,7 +13,7 @@ export default function NotFound() {
             Page Not Found
           </h2>
           <p className="text-lg font-handwritten text-whiteboard-marker-black/70">
-            Oops! Looks like this square doesn't exist on the board.
+            Oops! Looks like this square doesn&apos;t exist on the board.
           </p>
         </div>
 
