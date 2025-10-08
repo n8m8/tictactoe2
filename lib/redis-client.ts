@@ -35,15 +35,25 @@ class IORedisClient implements RedisClient {
     const Redis = require('ioredis')
     this.client = new Redis(url, {
       maxRetriesPerRequest: 3,
-      lazyConnect: false,
+      lazyConnect: true, // Don't block on connection
+      connectTimeout: 5000,
+      retryStrategy(times) {
+        const delay = Math.min(times * 50, 2000)
+        return delay
+      },
     })
 
     this.client.on('error', (err: Error) => {
-      console.error('[Redis] Connection error:', err)
+      console.error('[Redis] Connection error:', err.message)
     })
 
     this.client.on('connect', () => {
       console.log('[Redis] Connected successfully')
+    })
+
+    // Connect asynchronously
+    this.client.connect().catch((err: Error) => {
+      console.error('[Redis] Failed to connect:', err.message)
     })
   }
 
