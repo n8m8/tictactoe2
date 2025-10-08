@@ -34,6 +34,7 @@ const config: Config = {
         'draw-o': 'drawO 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
         'win-line': 'winLine 500ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
         'pulse-cell': 'pulseCell 600ms ease-in-out infinite',
+        fadeIn: 'fadeIn 300ms ease-in forwards',
       },
       keyframes: {
         drawX: {

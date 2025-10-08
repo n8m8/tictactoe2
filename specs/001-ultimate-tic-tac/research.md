@@ -455,3 +455,55 @@ Proceed to **Phase 1: Design & Contracts**
 - Generate data-model.md
 - Create API contracts for signaling
 - Write quickstart.md for onboarding
+
+---
+
+## Implementation Notes (Post-Development)
+
+### Critical CSS Bug Fix (2025-10-08)
+
+**Issue**: Game board displayed as single row instead of 3×3 grid
+
+**Root Cause**: `.game-grid` in `app/globals.css` had incorrect grid template:
+```css
+/* WRONG - creates 9 columns in single row */
+grid-template-columns: repeat(9, minmax(0, 1fr));
+
+/* CORRECT - creates 3×3 grid */
+@apply grid-cols-3;
+```
+
+**Impact**: All game modes (multiplayer, single-player) were affected
+
+**Fix Applied**: Changed to use Tailwind's `grid-cols-3` utility class
+
+**Lesson**: When defining grid layouts for nested structures, ensure column count matches the visual structure (3×3 main board = 3 columns, not 9)
+
+**Task Updated**: T012 now explicitly notes requirement for `grid-cols-3` layout
+
+### Required Configuration Files
+
+**PostCSS Config** (`postcss.config.js`):
+- REQUIRED for TailwindCSS to work in Next.js
+- Must include `tailwindcss` and `autoprefixer` plugins
+- Without this, Tailwind classes won't be processed
+
+**Task Added**: T005 added to ensure PostCSS config is created early in setup phase
+
+### Font Configuration
+
+**Google Fonts vs Self-Hosted**:
+- Originally planned: Self-hosted Bunny Fonts
+- Actually implemented: `next/font/google` with Permanent Marker and Caveat
+- Rationale: Simpler setup, automatic optimization by Next.js, no manual font file management
+
+**Task Updated**: T010 changed from `next/font/local` to `next/font/google`
+
+### Animation Requirements
+
+**fadeIn Animation**:
+- Must be explicitly added to `tailwind.config.ts` animations
+- Used in game overlay components
+- Missing this causes console errors and broken animations
+
+**Task Updated**: T006 now explicitly mentions `fadeIn` animation requirement

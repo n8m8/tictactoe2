@@ -25,15 +25,16 @@
 - [ ] T002 Install additional dependencies: pnpm add simple-peer && pnpm add -D prettier prettier-plugin-tailwindcss @types/simple-peer
 - [ ] T003 [P] Configure ESLint in .eslintrc.json (extends next/core-web-vitals, prettier)
 - [ ] T004 [P] Configure Prettier in .prettierrc (semi: false, singleQuote: true, plugins: tailwindcss)
-- [ ] T005 [P] Configure TailwindCSS whiteboard theme in tailwind.config.ts (colors, fonts, animations per research.md)
-- [ ] T006 [P] Configure Next.js in next.config.js (reactStrictMode, removeConsole in prod, image optimization)
-- [ ] T007 [P] Create TypeScript config in tsconfig.json (strict mode, path aliases)
-- [ ] T008 Download and self-host Bunny Fonts (Permanent Marker, Caveat) in public/fonts/
-- [ ] T009 Create app/fonts.ts using next/font/local for Bunny Fonts (Permanent Marker for markers, Caveat for UI)
-- [ ] T010 Update app/layout.tsx with fonts, global providers, and metadata
-- [ ] T011 Create src/styles/globals.css with TailwindCSS imports and custom layers (whiteboard theme, game-cell component)
-- [ ] T012 [P] Create Docker development setup in docker/docker-compose.yml
-- [ ] T013 [P] Create Docker production Dockerfile with multi-stage build
+- [ ] T005 [P] Create PostCSS config in postcss.config.js (plugins: tailwindcss, autoprefixer) - REQUIRED for Tailwind to work
+- [ ] T006 [P] Configure TailwindCSS whiteboard theme in tailwind.config.ts (colors, fonts, animations including fadeIn per research.md)
+- [ ] T007 [P] Configure Next.js in next.config.js (reactStrictMode, removeConsole in prod, image optimization)
+- [ ] T008 [P] Create TypeScript config in tsconfig.json (strict mode, path aliases)
+- [ ] T009 Download and self-host Bunny Fonts (Permanent Marker, Caveat) in public/fonts/
+- [ ] T010 Create app/fonts.ts using next/font/google for Google Fonts (Permanent Marker for markers, Caveat for UI)
+- [ ] T011 Update app/layout.tsx with fonts, global providers, and metadata
+- [ ] T012 Create app/globals.css with TailwindCSS imports and custom layers (whiteboard theme, game-cell component, IMPORTANT: .game-grid must use grid-cols-3 for 3x3 layout of mini-games)
+- [ ] T013 [P] Create Docker development setup in docker/docker-compose.yml
+- [ ] T014 [P] Create Docker production Dockerfile with multi-stage build
 
 ---
 
@@ -43,14 +44,14 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T014 [P] Create TypeScript types in src/types/game.ts (GameState, MiniGame, MainBoard, Move, Player, CellState, GamePhase, MoveResult)
-- [ ] T015 [P] Create TypeScript types in src/types/signaling.ts (SignalingMessage, WebRTCOffer, WebRTCAnswer, ICECandidate)
-- [ ] T016 Implement game rules in src/lib/game-rules.ts (checkMiniGameWin, checkMainBoardWin, isValidMove, isMiniGameDraw, isGameDraw)
-- [ ] T017 Implement game state reducer in src/lib/game-state.ts (gameReducer with MAKE_MOVE, RESET_GAME, SYNC_STATE, SET_WINNER actions)
-- [ ] T018 Create base UI components in src/components/ui/Button.tsx (whiteboard-themed with hover/active states)
-- [ ] T019 [P] Create base UI components in src/components/ui/Input.tsx (join code input styling)
-- [ ] T020 [P] Create base UI components in src/components/ui/Modal.tsx (options/debug modal shell)
-- [ ] T021 Create title screen at app/page.tsx with navigation buttons (Host Game, Join Game, Single Player, How to Play, Options)
+- [ ] T015 [P] Create TypeScript types in types/game.ts (GameState, MiniGame, MainBoard, Move, Player, CellState, GamePhase, MoveResult)
+- [ ] T016 [P] Create TypeScript types in types/signaling.ts (SignalingMessage, WebRTCOffer, WebRTCAnswer, ICECandidate)
+- [ ] T017 Implement game rules in lib/game-rules.ts (checkMiniGameWin, checkMainBoardWin, isValidMove, isMiniGameDraw, isGameDraw)
+- [ ] T018 Implement game state reducer in lib/game-state.ts (gameReducer with MAKE_MOVE, RESET_GAME, SYNC_STATE, SET_WINNER actions)
+- [ ] T019 Create base UI components in components/ui/Button.tsx (whiteboard-themed with hover/active states)
+- [ ] T020 [P] Create base UI components in components/ui/Input.tsx (join code input styling)
+- [ ] T021 [P] Create base UI components in components/ui/Modal.tsx (options/debug modal shell)
+- [ ] T085 Create title screen at app/page.tsx with navigation buttons (Host Game, Join Game, Single Player, How to Play, Options)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -64,25 +65,25 @@
 
 ### Implementation for User Story 1
 
-- [ ] T022 [P] [US1] Create signaling API endpoint src/app/api/signaling/create-room/route.ts (generate sessionId, hostToken, 6-char joinCode, store in KV with 1hr TTL)
-- [ ] T023 [P] [US1] Create signaling API endpoint src/app/api/signaling/join-room/route.ts (validate joinCode, generate guestToken, return sessionId and tokens)
-- [ ] T024 [P] [US1] Create signaling API endpoint src/app/api/signaling/signal/route.ts (store WebRTC offer/answer/ICE candidates in KV list per session)
-- [ ] T025 [P] [US1] Create signaling API endpoint src/app/api/signaling/poll/route.ts (retrieve pending signals for session since timestamp)
-- [ ] T026 [US1] Create signaling client in src/lib/signaling-client.ts (HTTP functions to call create-room, join-room, signal, poll endpoints)
-- [ ] T027 [US1] Create P2P connection manager in src/lib/p2p-connection.ts (SimplePeer wrapper, connect, send, receive, reconnect logic)
-- [ ] T028 [US1] Create useP2PConnection hook in src/hooks/useP2PConnection.ts (manages WebRTC lifecycle, signaling, connection state)
-- [ ] T029 [US1] Create useGameState hook in src/hooks/useGameState.ts (wraps gameReducer, syncs state over P2P, handles move validation)
-- [ ] T030 [P] [US1] Create MiniGame component in src/components/game/MiniGame.tsx (3x3 grid, click handlers, winner highlight)
-- [ ] T031 [P] [US1] Create MainBoard component in src/components/game/MainBoard.tsx (9 MiniGame instances, grid layout, main board state display)
-- [ ] T032 [P] [US1] Create GameOverlay component in src/components/game/GameOverlay.tsx (current turn indicator, session score, game phase messages)
-- [ ] T033 [US1] Create host game screen at app/host/page.tsx (call create-room API, display joinCode, wait for guest, initiate P2P connection)
-- [ ] T034 [US1] Create join game screen at app/join/page.tsx (input joinCode, call join-room API, initiate P2P connection)
-- [ ] T035 [US1] Create gameplay screen at app/play/page.tsx (MainBoard, GameOverlay, useGameState, useP2PConnection, handle moves, detect win, show rematch UI)
-- [ ] T036 [US1] Implement rematch logic in gameplay screen (send rematch_request/rematch_accept messages, reset game state, alternate starting player)
-- [ ] T037 [US1] Implement session score tracking in useGameState hook (increment winner's score on game end, display in GameOverlay, reset on disconnect)
-- [ ] T038 [US1] Add move synchronization in useGameState (send move messages over P2P, apply remote moves, conflict resolution via timestamp)
-- [ ] T039 [US1] Add connection status indicators in GameOverlay (connected, disconnected, reconnecting states, latency display)
-- [ ] T040 [US1] Add error handling for connection failures (show user-friendly messages, retry buttons, return to menu option)
+- [ ] T085 [P] [US1] Create signaling API endpoint src/app/api/signaling/create-room/route.ts (generate sessionId, hostToken, 6-char joinCode, store in KV with 1hr TTL)
+- [ ] T085 [P] [US1] Create signaling API endpoint src/app/api/signaling/join-room/route.ts (validate joinCode, generate guestToken, return sessionId and tokens)
+- [ ] T085 [P] [US1] Create signaling API endpoint src/app/api/signaling/signal/route.ts (store WebRTC offer/answer/ICE candidates in KV list per session)
+- [ ] T085 [P] [US1] Create signaling API endpoint src/app/api/signaling/poll/route.ts (retrieve pending signals for session since timestamp)
+- [ ] T085 [US1] Create signaling client in src/lib/signaling-client.ts (HTTP functions to call create-room, join-room, signal, poll endpoints)
+- [ ] T085 [US1] Create P2P connection manager in src/lib/p2p-connection.ts (SimplePeer wrapper, connect, send, receive, reconnect logic)
+- [ ] T085 [US1] Create useP2PConnection hook in src/hooks/useP2PConnection.ts (manages WebRTC lifecycle, signaling, connection state)
+- [ ] T085 [US1] Create useGameState hook in src/hooks/useGameState.ts (wraps gameReducer, syncs state over P2P, handles move validation)
+- [ ] T085 [P] [US1] Create MiniGame component in src/components/game/MiniGame.tsx (3x3 grid, click handlers, winner highlight)
+- [ ] T085 [P] [US1] Create MainBoard component in src/components/game/MainBoard.tsx (9 MiniGame instances, grid layout, main board state display)
+- [ ] T085 [P] [US1] Create GameOverlay component in src/components/game/GameOverlay.tsx (current turn indicator, session score, game phase messages)
+- [ ] T085 [US1] Create host game screen at app/host/page.tsx (call create-room API, display joinCode, wait for guest, initiate P2P connection)
+- [ ] T085 [US1] Create join game screen at app/join/page.tsx (input joinCode, call join-room API, initiate P2P connection)
+- [ ] T085 [US1] Create gameplay screen at app/play/page.tsx (MainBoard, GameOverlay, useGameState, useP2PConnection, handle moves, detect win, show rematch UI)
+- [ ] T085 [US1] Implement rematch logic in gameplay screen (send rematch_request/rematch_accept messages, reset game state, alternate starting player)
+- [ ] T085 [US1] Implement session score tracking in useGameState hook (increment winner's score on game end, display in GameOverlay, reset on disconnect)
+- [ ] T085 [US1] Add move synchronization in useGameState (send move messages over P2P, apply remote moves, conflict resolution via timestamp)
+- [ ] T085 [US1] Add connection status indicators in GameOverlay (connected, disconnected, reconnecting states, latency display)
+- [ ] T085 [US1] Add error handling for connection failures (show user-friendly messages, retry buttons, return to menu option)
 
 **Checkpoint**: User Story 1 complete - full multiplayer game works end-to-end, independently testable
 
@@ -96,11 +97,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T041 [US2] Create useLocalGame hook in src/hooks/useLocalGame.ts (local state management, alternate turns, no P2P, sessionStorage persistence)
-- [ ] T042 [US2] Create single-player mode route at app/single-player/page.tsx (uses useLocalGame instead of useP2PConnection, MainBoard, GameOverlay)
-- [ ] T043 [US2] Add "Single Player" button to title screen (app/page.tsx) linking to /single-player
-- [ ] T044 [US2] Implement sessionStorage persistence in useLocalGame (save game state on move, restore on mount, clear on reset)
-- [ ] T045 [US2] Add reset/new game button to single-player screen (clears sessionStorage, resets state to initial)
+- [ ] T085 [US2] Create useLocalGame hook in src/hooks/useLocalGame.ts (local state management, alternate turns, no P2P, sessionStorage persistence)
+- [ ] T085 [US2] Create single-player mode route at app/single-player/page.tsx (uses useLocalGame instead of useP2PConnection, MainBoard, GameOverlay)
+- [ ] T085 [US2] Add "Single Player" button to title screen (app/page.tsx) linking to /single-player
+- [ ] T085 [US2] Implement sessionStorage persistence in useLocalGame (save game state on move, restore on mount, clear on reset)
+- [ ] T085 [US2] Add reset/new game button to single-player screen (clears sessionStorage, resets state to initial)
 
 **Checkpoint**: User Story 2 complete - single-player mode works offline, independently testable
 
@@ -114,12 +115,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T046 [P] [US3] Create tutorial content in app/tutorial/page.tsx (markdown-style sections explaining nested game structure)
-- [ ] T047 [P] [US3] Create tutorial visual examples using MainBoard/MiniGame components (show example game states, highlight winning patterns)
-- [ ] T048 [US3] Add "How to Play" button to title screen (app/page.tsx) linking to /tutorial
-- [ ] T049 [US3] Implement tutorial navigation (Next/Back buttons, section tracking, progress indicator)
-- [ ] T050 [US3] Add interactive tutorial examples (clickable demo board showing legal moves, mini-game wins, overall wins)
-- [ ] T051 [US3] Create tutorial animations showing move sequence (Tic → Tac → Toe progression with visual highlights)
+- [ ] T085 [P] [US3] Create tutorial content in app/tutorial/page.tsx (markdown-style sections explaining nested game structure)
+- [ ] T085 [P] [US3] Create tutorial visual examples using MainBoard/MiniGame components (show example game states, highlight winning patterns)
+- [ ] T085 [US3] Add "How to Play" button to title screen (app/page.tsx) linking to /tutorial
+- [ ] T085 [US3] Implement tutorial navigation (Next/Back buttons, section tracking, progress indicator)
+- [ ] T085 [US3] Add interactive tutorial examples (clickable demo board showing legal moves, mini-game wins, overall wins)
+- [ ] T085 [US3] Create tutorial animations showing move sequence (Tic → Tac → Toe progression with visual highlights)
 
 **Checkpoint**: User Story 3 complete - tutorial teaches rules effectively, independently testable
 
@@ -133,11 +134,11 @@
 
 ### Implementation for User Story 4
 
-- [ ] T052 [US4] Enhance GameOverlay component (src/components/game/GameOverlay.tsx) with prominent session score display
-- [ ] T053 [US4] Add session score initialization in useGameState hook (hostScore: 0, guestScore: 0, drawCount: 0)
-- [ ] T054 [US4] Implement score increment on game end in useGameState (detect winner, update appropriate score, sync via P2P)
-- [ ] T055 [US4] Add score reset on disconnect in useP2PConnection hook (clear session scores when peer connection closes)
-- [ ] T056 [US4] Display session summary on game-over screen (e.g., "You won 3-2 this session")
+- [ ] T085 [US4] Enhance GameOverlay component (src/components/game/GameOverlay.tsx) with prominent session score display
+- [ ] T085 [US4] Add session score initialization in useGameState hook (hostScore: 0, guestScore: 0, drawCount: 0)
+- [ ] T085 [US4] Implement score increment on game end in useGameState (detect winner, update appropriate score, sync via P2P)
+- [ ] T085 [US4] Add score reset on disconnect in useP2PConnection hook (clear session scores when peer connection closes)
+- [ ] T085 [US4] Display session summary on game-over screen (e.g., "You won 3-2 this session")
 
 **Checkpoint**: User Story 4 complete - session tracking works accurately, independently testable
 
@@ -151,15 +152,15 @@
 
 ### Implementation for User Story 5
 
-- [ ] T057 [P] [US5] Create DrawSymbol animation component in src/components/animations/DrawSymbol.tsx (X/O drawing effect using CSS transform/opacity)
-- [ ] T058 [P] [US5] Create WinCelebration animation component in src/components/animations/WinCelebration.tsx (confetti/checkmark celebration in marker colors)
-- [ ] T059 [US5] Integrate DrawSymbol into MiniGame component (animate X/O appearance on move with 300ms duration)
-- [ ] T060 [US5] Add mini-game win animation to MiniGame component (highlight winning pattern, scale/pulse effect, 500ms duration)
-- [ ] T061 [US5] Add main board win animation using WinCelebration (trigger on overall win detection, overlay on game screen)
-- [ ] T062 [US5] Apply whiteboard theme styling to all screens (white/off-white backgrounds, expo marker colors, handwritten fonts)
-- [ ] T063 [US5] Add hover/active states to all interactive elements (scale transforms, shadow effects, 200ms transitions)
-- [ ] T064 [US5] Optimize animations for mobile (use will-change, transform-only, GPU acceleration via translateZ(0))
-- [ ] T065 [US5] Add game state transition animations (fade in/out between screens, slide transitions)
+- [ ] T085 [P] [US5] Create DrawSymbol animation component in src/components/animations/DrawSymbol.tsx (X/O drawing effect using CSS transform/opacity)
+- [ ] T085 [P] [US5] Create WinCelebration animation component in src/components/animations/WinCelebration.tsx (confetti/checkmark celebration in marker colors)
+- [ ] T085 [US5] Integrate DrawSymbol into MiniGame component (animate X/O appearance on move with 300ms duration)
+- [ ] T085 [US5] Add mini-game win animation to MiniGame component (highlight winning pattern, scale/pulse effect, 500ms duration)
+- [ ] T085 [US5] Add main board win animation using WinCelebration (trigger on overall win detection, overlay on game screen)
+- [ ] T085 [US5] Apply whiteboard theme styling to all screens (white/off-white backgrounds, expo marker colors, handwritten fonts)
+- [ ] T085 [US5] Add hover/active states to all interactive elements (scale transforms, shadow effects, 200ms transitions)
+- [ ] T085 [US5] Optimize animations for mobile (use will-change, transform-only, GPU acceleration via translateZ(0))
+- [ ] T085 [US5] Add game state transition animations (fade in/out between screens, slide transitions)
 
 **Checkpoint**: User Story 5 complete - visual design polished and animations smooth at 60fps
 
@@ -173,14 +174,14 @@
 
 ### Implementation for User Story 6
 
-- [ ] T066 [P] [US6] Create options screen at app/options/page.tsx (sound toggle, debug mode toggle, theme settings)
-- [ ] T067 [P] [US6] Create useSoundEffects hook in src/hooks/useSoundEffects.ts (play sound function, enabled state, volume control)
-- [ ] T068 [US6] Add sound effect triggers to game events (move click, mini-win, game-win, error) using useSoundEffects
-- [ ] T069 [US6] Place sound MP3 files in public/sounds/ (move.mp3, mini-win.mp3, game-win.mp3, error.mp3 ~15KB each)
-- [ ] T070 [US6] Implement debug mode overlay in GameOverlay component (show currentTurn, moveHistory, miniGame states, connection status)
-- [ ] T071 [US6] Add "Options" button to title screen and in-game menu (app/page.tsx, app/play/page.tsx)
-- [ ] T072 [US6] Store options in localStorage (sound enabled, debug mode, persist across sessions)
-- [ ] T073 [US6] Add debug panel showing P2P connection metrics (RTT, packet loss, connection state, signal log)
+- [ ] T085 [P] [US6] Create options screen at app/options/page.tsx (sound toggle, debug mode toggle, theme settings)
+- [ ] T085 [P] [US6] Create useSoundEffects hook in src/hooks/useSoundEffects.ts (play sound function, enabled state, volume control)
+- [ ] T085 [US6] Add sound effect triggers to game events (move click, mini-win, game-win, error) using useSoundEffects
+- [ ] T085 [US6] Place sound MP3 files in public/sounds/ (move.mp3, mini-win.mp3, game-win.mp3, error.mp3 ~15KB each)
+- [ ] T085 [US6] Implement debug mode overlay in GameOverlay component (show currentTurn, moveHistory, miniGame states, connection status)
+- [ ] T085 [US6] Add "Options" button to title screen and in-game menu (app/page.tsx, app/play/page.tsx)
+- [ ] T085 [US6] Store options in localStorage (sound enabled, debug mode, persist across sessions)
+- [ ] T085 [US6] Add debug panel showing P2P connection metrics (RTT, packet loss, connection state, signal log)
 
 **Checkpoint**: User Story 6 complete - options and debug tools functional
 
@@ -190,17 +191,17 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T074 [P] Add loading states to all async operations (signaling API calls, P2P connection, game initialization)
-- [ ] T075 [P] Add error boundaries to handle React component errors gracefully (display error UI, log to console in dev)
-- [ ] T076 [P] Implement responsive design breakpoints (mobile 375px, tablet 768px, desktop 1024px+)
-- [ ] T077 [P] Add touch target expansion to game cells for mobile (invisible ::before element expanding to 44px+)
-- [ ] T078 [P] Implement safe area handling for mobile (env(safe-area-inset-*) padding)
-- [ ] T079 Optimize bundle size (dynamic imports for routes, tree-shake unused TailwindCSS, verify <500KB target)
-- [ ] T080 Add meta tags for SEO and social sharing (og:image, description, title)
-- [ ] T081 Create README.md in repository root (quickstart, deployment instructions, project structure)
-- [ ] T082 Verify accessibility basics (semantic HTML, ARIA labels on buttons, keyboard navigation for menus)
-- [ ] T083 Test on target browsers (Chrome/Firefox desktop, Chrome/Firefox mobile on 375px and 1920px)
-- [ ] T084 Verify performance targets (Lighthouse score >90, 60fps animations, <2s load on 3G throttling)
+- [ ] T085 [P] Add loading states to all async operations (signaling API calls, P2P connection, game initialization)
+- [ ] T085 [P] Add error boundaries to handle React component errors gracefully (display error UI, log to console in dev)
+- [ ] T085 [P] Implement responsive design breakpoints (mobile 375px, tablet 768px, desktop 1024px+)
+- [ ] T085 [P] Add touch target expansion to game cells for mobile (invisible ::before element expanding to 44px+)
+- [ ] T085 [P] Implement safe area handling for mobile (env(safe-area-inset-*) padding)
+- [ ] T085 Optimize bundle size (dynamic imports for routes, tree-shake unused TailwindCSS, verify <500KB target)
+- [ ] T085 Add meta tags for SEO and social sharing (og:image, description, title)
+- [ ] T085 Create README.md in repository root (quickstart, deployment instructions, project structure)
+- [ ] T085 Verify accessibility basics (semantic HTML, ARIA labels on buttons, keyboard navigation for menus)
+- [ ] T085 Test on target browsers (Chrome/Firefox desktop, Chrome/Firefox mobile on 375px and 1920px)
+- [ ] T085 Verify performance targets (Lighthouse score >90, 60fps animations, <2s load on 3G throttling)
 
 ---
 
