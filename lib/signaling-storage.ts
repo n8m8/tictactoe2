@@ -13,7 +13,10 @@ export type RoomData = {
 }
 
 // Use KV if environment variables are present, otherwise use in-memory storage
-const useKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
+const useKV = !!(
+  (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) ||
+  process.env.KV_URL
+)
 const ROOM_TTL = 60 * 60 // 1 hour in seconds
 
 // In-memory fallback: Use global scope to persist across Next.js hot reloads

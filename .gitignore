@@ -1,2 +1,6 @@
 node_modules
 /.next/
+
+# Environment variables with secrets
+.env.local
+.env*.local
