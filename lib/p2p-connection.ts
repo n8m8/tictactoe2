@@ -39,32 +39,59 @@ export class P2PConnection {
     try {
       this.updateStatus('connecting')
 
-      // Create SimplePeer instance
-      this.peer = new SimplePeer({
-        initiator: this.config.isHost,
-        trickle: true,
-        config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-          ],
-        },
-      })
+      if (this.config.isHost) {
+        // Host: Wait for guest to join before creating peer
+        console.log('[HOST] Waiting for guest to join...')
+        this.signalingClient.startPolling(
+          this.config.joinCode,
+          this.config.peerId,
+          (signal) => this.handleIncomingSignal(signal),
+          () => this.initializePeer(), // Create peer when guest joins
+          1000
+        )
+      } else {
+        // Guest: Create peer immediately
+        console.log('[GUEST] Creating peer and connecting...')
+        this.initializePeer()
 
-      // Set up peer event handlers
-      this.setupPeerHandlers()
-
-      // Start polling for signals from the other peer
-      this.signalingClient.startPolling(
-        this.config.joinCode,
-        this.config.peerId,
-        (signal) => this.handleIncomingSignal(signal),
-        undefined,
-        1000
-      )
+        // Start polling for signals from host
+        this.signalingClient.startPolling(
+          this.config.joinCode,
+          this.config.peerId,
+          (signal) => this.handleIncomingSignal(signal),
+          undefined,
+          1000
+        )
+      }
     } catch (error) {
       this.handleError(error as Error)
     }
+  }
+
+  private initializePeer(): void {
+    if (this.peer) {
+      console.log('Peer already initialized')
+      return
+    }
+
+    console.log(
+      `[${this.config.isHost ? 'HOST' : 'GUEST'}] Initializing SimplePeer...`
+    )
+
+    // Create SimplePeer instance
+    this.peer = new SimplePeer({
+      initiator: this.config.isHost,
+      trickle: true,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+        ],
+      },
+    })
+
+    // Set up peer event handlers
+    this.setupPeerHandlers()
   }
 
   /**
