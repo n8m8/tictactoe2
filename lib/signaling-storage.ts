@@ -12,25 +12,29 @@ export type RoomData = {
   createdAt: number
 }
 
-const isProduction = process.env.NODE_ENV === 'production'
+// Use KV if environment variables are present, otherwise use in-memory storage
+const useKV = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
 const ROOM_TTL = 60 * 60 // 1 hour in seconds
 
-// Development: Use global scope to persist across Next.js hot reloads
+// In-memory fallback: Use global scope to persist across Next.js hot reloads
 const globalForRooms = globalThis as unknown as {
   rooms: Map<string, RoomData> | undefined
 }
 
 const devRooms = globalForRooms.rooms ?? new Map<string, RoomData>()
 
-if (!isProduction) {
+if (!useKV) {
   globalForRooms.rooms = devRooms
+  console.log('[Storage] Using in-memory storage (KV not configured)')
+} else {
+  console.log('[Storage] Using Vercel KV storage')
 }
 
 /**
  * Get room data by join code
  */
 export async function getRoom(joinCode: string): Promise<RoomData | null> {
-  if (isProduction) {
+  if (useKV) {
     return await kv.get<RoomData>(`room:${joinCode}`)
   }
   return devRooms.get(joinCode) ?? null
@@ -43,8 +47,8 @@ export async function setRoom(
   joinCode: string,
   data: RoomData
 ): Promise<void> {
-  if (isProduction) {
-    console.log('[KV] Setting room:', joinCode, 'isProduction:', isProduction)
+  if (useKV) {
+    console.log('[KV] Setting room:', joinCode, 'useKV:', useKV)
     try {
       await kv.set(`room:${joinCode}`, data, { ex: ROOM_TTL })
       console.log('[KV] Room set successfully')
@@ -61,7 +65,7 @@ export async function setRoom(
  * Check if room exists
  */
 export async function hasRoom(joinCode: string): Promise<boolean> {
-  if (isProduction) {
+  if (useKV) {
     try {
       const exists = await kv.exists(`room:${joinCode}`)
       return exists === 1
@@ -77,15 +81,15 @@ export async function hasRoom(joinCode: string): Promise<boolean> {
  * Delete room
  */
 export async function deleteRoom(joinCode: string): Promise<void> {
-  if (isProduction) {
+  if (useKV) {
     await kv.del(`room:${joinCode}`)
   } else {
     devRooms.delete(joinCode)
   }
 }
 
-// Development only: Clean up old rooms (older than 1 hour)
-if (!isProduction && typeof setInterval !== 'undefined') {
+// In-memory storage only: Clean up old rooms (older than 1 hour)
+if (!useKV && typeof setInterval !== 'undefined') {
   setInterval(() => {
     const now = Date.now()
     const oneHour = 60 * 60 * 1000
