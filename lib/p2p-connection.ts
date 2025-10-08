@@ -86,6 +86,16 @@ export class P2PConnection {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' },
+          {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject',
+          },
+          {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject',
+          },
         ],
       },
     })
@@ -165,10 +175,10 @@ export class P2PConnection {
     // When we have a signal to send to the other peer
     this.peer.on('signal', async (signal) => {
       try {
+        const signalType = signal.type || (signal.candidate ? 'candidate' : 'unknown')
         console.log(
           `[${this.config.isHost ? 'HOST' : 'GUEST'}] Sending signal:`,
-          signal.type || 'unknown',
-          signal.candidate ? `(${signal.candidate.substring(0, 20)}...)` : ''
+          signalType
         )
         await this.signalingClient.sendSignal(
           this.config.joinCode,
@@ -176,7 +186,8 @@ export class P2PConnection {
           signal
         )
         console.log(
-          `[${this.config.isHost ? 'HOST' : 'GUEST'}] Signal sent successfully`
+          `[${this.config.isHost ? 'HOST' : 'GUEST'}] Signal sent successfully:`,
+          signalType
         )
       } catch (error) {
         console.error('Error sending signal:', error)
