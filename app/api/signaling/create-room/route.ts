@@ -43,8 +43,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('Error creating room:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create room'
     return NextResponse.json(
-      { error: 'Failed to create room' },
+      {
+        error: 'Failed to create room',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }

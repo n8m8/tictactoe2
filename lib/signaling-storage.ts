@@ -44,7 +44,14 @@ export async function setRoom(
   data: RoomData
 ): Promise<void> {
   if (isProduction) {
-    await kv.set(`room:${joinCode}`, data, { ex: ROOM_TTL })
+    console.log('[KV] Setting room:', joinCode, 'isProduction:', isProduction)
+    try {
+      await kv.set(`room:${joinCode}`, data, { ex: ROOM_TTL })
+      console.log('[KV] Room set successfully')
+    } catch (error) {
+      console.error('[KV] Failed to set room:', error)
+      throw error
+    }
   } else {
     devRooms.set(joinCode, data)
   }
@@ -55,8 +62,13 @@ export async function setRoom(
  */
 export async function hasRoom(joinCode: string): Promise<boolean> {
   if (isProduction) {
-    const exists = await kv.exists(`room:${joinCode}`)
-    return exists === 1
+    try {
+      const exists = await kv.exists(`room:${joinCode}`)
+      return exists === 1
+    } catch (error) {
+      console.error('[KV] Failed to check room existence:', error)
+      throw error
+    }
   }
   return devRooms.has(joinCode)
 }

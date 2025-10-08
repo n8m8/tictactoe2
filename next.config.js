@@ -2,7 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    // Temporarily disabled to debug KV issues
+    // removeConsole: process.env.NODE_ENV === 'production',
   },
   images: {
     formats: ['image/avif', 'image/webp'],
