@@ -16,6 +16,7 @@ export class SignalingClient {
   private baseUrl: string
   private pollingInterval?: NodeJS.Timeout
   private lastSeq = -1
+  private guestJoinedNotified = false
 
   constructor(baseUrl = '/api/signaling') {
     this.baseUrl = baseUrl
@@ -134,6 +135,7 @@ export class SignalingClient {
     intervalMs = 1000
   ): void {
     this.stopPolling()
+    this.guestJoinedNotified = false
 
     this.pollingInterval = setInterval(async () => {
       try {
@@ -144,8 +146,10 @@ export class SignalingClient {
           onSignal(signal)
         }
 
-        // Handle guest joined
-        if (response.guestJoined && onGuestJoined) {
+        // Handle guest joined (only notify once)
+        if (response.guestJoined && onGuestJoined && !this.guestJoinedNotified) {
+          this.guestJoinedNotified = true
+          console.log('[SignalingClient] Guest joined - notifying')
           onGuestJoined()
         }
       } catch (error) {
@@ -163,5 +167,6 @@ export class SignalingClient {
       this.pollingInterval = undefined
     }
     this.lastSeq = -1
+    this.guestJoinedNotified = false
   }
 }

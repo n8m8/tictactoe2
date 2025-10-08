@@ -206,7 +206,12 @@ export class P2PConnection {
   }
 
   private handleIncomingSignal(signal: any): void {
-    if (!this.peer) return
+    if (!this.peer) {
+      console.warn(
+        `[${this.config.isHost ? 'HOST' : 'GUEST'}] Received signal but peer not initialized yet, ignoring`
+      )
+      return
+    }
 
     try {
       console.log(

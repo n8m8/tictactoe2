@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
       guestJoined: !!room.guestPeerId,
     }
 
+    console.log(`[POLL] ${body.peerId === room.hostPeerId ? 'HOST' : 'GUEST'} polling - guestJoined: ${response.guestJoined}, signals: ${response.signals.length}`)
+
     return NextResponse.json(response)
   } catch (error) {
     console.error('Error polling signals:', error)
