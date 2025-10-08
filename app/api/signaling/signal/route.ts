@@ -32,6 +32,9 @@ export async function POST(request: NextRequest) {
     })
     await setRoom(joinCode, room)
 
+    const isHost = body.from === room.hostPeerId
+    console.log(`[SIGNAL] ${isHost ? 'HOST' : 'GUEST'} sent ${body.signal.type || 'signal'} (total: ${room.signals.length})`)
+
     const response: SignalResponse = {
       success: true,
     }

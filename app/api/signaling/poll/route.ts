@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
       guestJoined: !!room.guestPeerId,
     }
 
-    console.log(`[POLL] ${body.peerId === room.hostPeerId ? 'HOST' : 'GUEST'} polling - guestJoined: ${response.guestJoined}, signals: ${response.signals.length}`)
+    const isHost = body.peerId === room.hostPeerId
+    if (response.signals.length > 0) {
+      console.log(`[POLL] ${isHost ? 'HOST' : 'GUEST'} received ${response.signals.length} signal(s):`, response.signals.map(s => s.type))
+    }
 
     return NextResponse.json(response)
   } catch (error) {

@@ -167,12 +167,16 @@ export class P2PConnection {
       try {
         console.log(
           `[${this.config.isHost ? 'HOST' : 'GUEST'}] Sending signal:`,
-          signal.type
+          signal.type || 'unknown',
+          signal.candidate ? `(${signal.candidate.substring(0, 20)}...)` : ''
         )
         await this.signalingClient.sendSignal(
           this.config.joinCode,
           this.config.peerId,
           signal
+        )
+        console.log(
+          `[${this.config.isHost ? 'HOST' : 'GUEST'}] Signal sent successfully`
         )
       } catch (error) {
         console.error('Error sending signal:', error)

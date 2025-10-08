@@ -142,6 +142,9 @@ export class SignalingClient {
         const response = await this.pollSignals(joinCode, peerId)
 
         // Handle new signals
+        if (response.signals.length > 0) {
+          console.log(`[SignalingClient] Processing ${response.signals.length} signal(s)`)
+        }
         for (const signal of response.signals) {
           onSignal(signal)
         }
