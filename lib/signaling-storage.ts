@@ -1,36 +1,85 @@
 /**
  * Shared storage for signaling server
- * In-memory storage for rooms (replace with Redis/DB in production)
- *
- * IMPORTANT: Using global scope to persist across Next.js hot reloads
+ * Uses Vercel KV (Redis) in production, in-memory Map in development
  */
 
-type RoomData = {
+import { kv } from '@vercel/kv'
+
+export type RoomData = {
   hostPeerId: string
   guestPeerId?: string
   signals: Array<{ from: string; signal: any }>
   createdAt: number
 }
 
-// Use global scope to persist across Next.js module reloads
+const isProduction = process.env.NODE_ENV === 'production'
+const ROOM_TTL = 60 * 60 // 1 hour in seconds
+
+// Development: Use global scope to persist across Next.js hot reloads
 const globalForRooms = globalThis as unknown as {
   rooms: Map<string, RoomData> | undefined
 }
 
-export const rooms = globalForRooms.rooms ?? new Map<string, RoomData>()
+const devRooms = globalForRooms.rooms ?? new Map<string, RoomData>()
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForRooms.rooms = rooms
+if (!isProduction) {
+  globalForRooms.rooms = devRooms
 }
 
-// Clean up old rooms (older than 1 hour)
-if (typeof setInterval !== 'undefined' && !globalForRooms.rooms) {
+/**
+ * Get room data by join code
+ */
+export async function getRoom(joinCode: string): Promise<RoomData | null> {
+  if (isProduction) {
+    return await kv.get<RoomData>(`room:${joinCode}`)
+  }
+  return devRooms.get(joinCode) ?? null
+}
+
+/**
+ * Set room data with TTL
+ */
+export async function setRoom(
+  joinCode: string,
+  data: RoomData
+): Promise<void> {
+  if (isProduction) {
+    await kv.set(`room:${joinCode}`, data, { ex: ROOM_TTL })
+  } else {
+    devRooms.set(joinCode, data)
+  }
+}
+
+/**
+ * Check if room exists
+ */
+export async function hasRoom(joinCode: string): Promise<boolean> {
+  if (isProduction) {
+    const exists = await kv.exists(`room:${joinCode}`)
+    return exists === 1
+  }
+  return devRooms.has(joinCode)
+}
+
+/**
+ * Delete room
+ */
+export async function deleteRoom(joinCode: string): Promise<void> {
+  if (isProduction) {
+    await kv.del(`room:${joinCode}`)
+  } else {
+    devRooms.delete(joinCode)
+  }
+}
+
+// Development only: Clean up old rooms (older than 1 hour)
+if (!isProduction && typeof setInterval !== 'undefined') {
   setInterval(() => {
     const now = Date.now()
     const oneHour = 60 * 60 * 1000
-    for (const [code, room] of rooms.entries()) {
+    for (const [code, room] of devRooms.entries()) {
       if (now - room.createdAt > oneHour) {
-        rooms.delete(code)
+        devRooms.delete(code)
       }
     }
   }, 5 * 60 * 1000) // Run every 5 minutes

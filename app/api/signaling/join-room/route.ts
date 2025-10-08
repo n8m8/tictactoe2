@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { JoinRoomRequest, JoinRoomResponse } from '@/types/signaling'
-import { rooms } from '@/lib/signaling-storage'
+import { getRoom, setRoom } from '@/lib/signaling-storage'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const joinCode = body.joinCode.toUpperCase()
-    const room = rooms.get(joinCode)
+    const room = await getRoom(joinCode)
 
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 })
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
 
     // Add guest to room
     room.guestPeerId = body.guestPeerId
+    await setRoom(joinCode, room)
 
     const response: JoinRoomResponse = {
       joinCode,

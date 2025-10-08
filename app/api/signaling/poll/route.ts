@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { PollRequest, PollResponse } from '@/types/signaling'
-import { rooms } from '@/lib/signaling-storage'
+import { getRoom } from '@/lib/signaling-storage'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const joinCode = body.joinCode.toUpperCase()
-    const room = rooms.get(joinCode)
+    const room = await getRoom(joinCode)
 
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 })

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { CreateRoomRequest, CreateRoomResponse } from '@/types/signaling'
-import { rooms } from '@/lib/signaling-storage'
+import { hasRoom, setRoom } from '@/lib/signaling-storage'
 
 function generateJoinCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Exclude similar chars
@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
     let joinCode: string
     do {
       joinCode = generateJoinCode()
-    } while (rooms.has(joinCode))
+    } while (await hasRoom(joinCode))
 
     // Create room
-    rooms.set(joinCode, {
+    await setRoom(joinCode, {
       hostPeerId: body.hostPeerId,
       signals: [],
       createdAt: Date.now(),
