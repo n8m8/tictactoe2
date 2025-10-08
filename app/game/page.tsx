@@ -101,10 +101,24 @@ export default function GamePage() {
 
   // Handle play again
   const handlePlayAgain = () => {
+    // Increment score for the winner
+    if (gameState.winner) {
+      dispatch({
+        type: 'INCREMENT_SCORE',
+        player: gameState.winner,
+      })
+
+      // Send score increment to peer
+      sendAction({
+        type: 'INCREMENT_SCORE',
+        player: gameState.winner,
+      })
+    }
+
     // Determine starting player (alternate from previous game)
     const startingPlayer = gameState.winner === 'X' ? 'O' : 'X'
 
-    // Reset locally
+    // Reset locally (this preserves scores)
     resetGame(startingPlayer)
 
     // Send reset to peer

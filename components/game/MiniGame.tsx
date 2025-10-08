@@ -22,19 +22,23 @@ export function MiniGame({
   }
 
   const getCellClasses = (cell: CellState, index: number): string => {
-    const baseClasses = 'game-cell relative'
+    const baseClasses = 'game-cell relative transition-all duration-200'
     const classes = [baseClasses]
 
-    // Cell state classes
-    if (cell === 'X') classes.push('text-whiteboard-marker-blue')
-    if (cell === 'O') classes.push('text-whiteboard-marker-red')
+    // Cell state classes with animations
+    if (cell === 'X') {
+      classes.push('text-whiteboard-marker-blue animate-drawX')
+    }
+    if (cell === 'O') {
+      classes.push('text-whiteboard-marker-red animate-drawO')
+    }
 
     // Disabled if mini-game is complete or not playable
     const isDisabled = isComplete || !isPlayable || cell !== null
     if (isDisabled) {
       classes.push('cursor-not-allowed opacity-50')
     } else {
-      classes.push('cursor-pointer hover:bg-whiteboard-grid')
+      classes.push('cursor-pointer hover:bg-whiteboard-grid hover:scale-105')
     }
 
     return classes.join(' ')
@@ -81,9 +85,9 @@ export function MiniGame({
 
       {/* Winner overlay */}
       {winner && (
-        <div className="absolute inset-0 flex items-center justify-center bg-whiteboard-bg/80 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center bg-whiteboard-bg/80 pointer-events-none animate-fadeIn">
           <span
-            className={`text-6xl font-marker ${
+            className={`text-6xl font-marker animate-pulseCell ${
               winner === 'X'
                 ? 'text-whiteboard-marker-blue'
                 : winner === 'O'

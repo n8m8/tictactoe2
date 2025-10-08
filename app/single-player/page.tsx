@@ -83,6 +83,15 @@ export default function SinglePlayerPage() {
 
   // Handle play again
   const handlePlayAgain = () => {
+    // Increment score for the winner
+    if (gameState.winner) {
+      dispatch({
+        type: 'INCREMENT_SCORE',
+        player: gameState.winner,
+      })
+    }
+
+    // Reset game (this preserves scores)
     resetGame('X')
   }
 

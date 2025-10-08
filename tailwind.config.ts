@@ -82,6 +82,14 @@ const config: Config = {
             opacity: '0.8',
           },
         },
+        fadeIn: {
+          '0%': {
+            opacity: '0',
+          },
+          '100%': {
+            opacity: '1',
+          },
+        },
       },
       boxShadow: {
         marker: '2px 2px 4px rgba(0, 0, 0, 0.08)',
