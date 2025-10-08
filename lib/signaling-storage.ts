@@ -1,9 +1,9 @@
 /**
  * Shared storage for signaling server
- * Uses Vercel KV (Redis) in production, in-memory Map in development
+ * Uses Redis when configured, in-memory Map otherwise
  */
 
-import { kv } from '@vercel/kv'
+import { redisClient, useKV } from './redis-client'
 
 export type RoomData = {
   hostPeerId: string
@@ -12,11 +12,6 @@ export type RoomData = {
   createdAt: number
 }
 
-// Use KV if environment variables are present, otherwise use in-memory storage
-const useKV = !!(
-  (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) ||
-  process.env.KV_URL
-)
 const ROOM_TTL = 60 * 60 // 1 hour in seconds
 
 // In-memory fallback: Use global scope to persist across Next.js hot reloads
@@ -28,17 +23,14 @@ const devRooms = globalForRooms.rooms ?? new Map<string, RoomData>()
 
 if (!useKV) {
   globalForRooms.rooms = devRooms
-  console.log('[Storage] Using in-memory storage (KV not configured)')
-} else {
-  console.log('[Storage] Using Vercel KV storage')
 }
 
 /**
  * Get room data by join code
  */
 export async function getRoom(joinCode: string): Promise<RoomData | null> {
-  if (useKV) {
-    return await kv.get<RoomData>(`room:${joinCode}`)
+  if (useKV && redisClient) {
+    return await redisClient.get<RoomData>(`room:${joinCode}`)
   }
   return devRooms.get(joinCode) ?? null
 }
@@ -50,13 +42,13 @@ export async function setRoom(
   joinCode: string,
   data: RoomData
 ): Promise<void> {
-  if (useKV) {
-    console.log('[KV] Setting room:', joinCode, 'useKV:', useKV)
+  if (useKV && redisClient) {
+    console.log('[Redis] Setting room:', joinCode)
     try {
-      await kv.set(`room:${joinCode}`, data, { ex: ROOM_TTL })
-      console.log('[KV] Room set successfully')
+      await redisClient.set(`room:${joinCode}`, data, { ex: ROOM_TTL })
+      console.log('[Redis] Room set successfully')
     } catch (error) {
-      console.error('[KV] Failed to set room:', error)
+      console.error('[Redis] Failed to set room:', error)
       throw error
     }
   } else {
@@ -68,12 +60,12 @@ export async function setRoom(
  * Check if room exists
  */
 export async function hasRoom(joinCode: string): Promise<boolean> {
-  if (useKV) {
+  if (useKV && redisClient) {
     try {
-      const exists = await kv.exists(`room:${joinCode}`)
+      const exists = await redisClient.exists(`room:${joinCode}`)
       return exists === 1
     } catch (error) {
-      console.error('[KV] Failed to check room existence:', error)
+      console.error('[Redis] Failed to check room existence:', error)
       throw error
     }
   }
@@ -84,8 +76,8 @@ export async function hasRoom(joinCode: string): Promise<boolean> {
  * Delete room
  */
 export async function deleteRoom(joinCode: string): Promise<void> {
-  if (useKV) {
-    await kv.del(`room:${joinCode}`)
+  if (useKV && redisClient) {
+    await redisClient.del(`room:${joinCode}`)
   } else {
     devRooms.delete(joinCode)
   }
