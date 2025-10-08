@@ -1,12 +1,12 @@
 # Ultimate Tic Tac Toe
 
-A modern, multiplayer implementation of Ultimate Tic Tac Toe with P2P connections, AI opponents, and a beautiful whiteboard-inspired design.
+A modern, multiplayer implementation of Ultimate Tic Tac Toe with P2P connections, local multiplayer, and a beautiful whiteboard-inspired design.
 
 ## 🎮 Features
 
 ### Game Modes
 - **Multiplayer**: Play with friends using P2P WebRTC connections via join codes
-- **Single Player**: Practice against AI with 3 difficulty levels (Easy, Medium, Hard)
+- **Local Multiplayer**: Two players take turns on the same device
 - **Tutorial**: Interactive guide to learn the rules and strategies
 
 ### Gameplay
@@ -94,7 +94,7 @@ tictactoe2/
 │   ├── game/              # Multiplayer game page
 │   ├── host/              # Host game page
 │   ├── join/              # Join game page
-│   ├── single-player/     # Single player vs AI
+│   ├── single-player/     # Local multiplayer (same device)
 │   ├── tutorial/          # Interactive tutorial
 │   └── options/           # Settings page
 ├── components/
@@ -106,7 +106,6 @@ tictactoe2/
 ├── lib/                   # Core game logic
 │   ├── game-rules.ts      # Win detection, validation
 │   ├── game-state.ts      # State reducer
-│   ├── ai-opponent.ts     # AI logic
 │   ├── p2p-connection.ts  # WebRTC P2P manager
 │   └── signaling-client.ts # Signaling API client
 ├── types/                 # TypeScript type definitions
@@ -159,13 +158,6 @@ Edit `tailwind.config.ts` to customize the whiteboard theme:
 - Background: `#FDFCFA`
 - Grid lines: `#E8E6E3`
 - Markers: Blue `#0066CC`, Red `#E63946`, Black `#1A1A1A`
-
-### AI Difficulty
-
-Modify `lib/ai-opponent.ts` to adjust AI behavior:
-- **Easy**: Pure random moves
-- **Medium**: Blocks wins, creates threats
-- **Hard**: Strategic positioning + all medium logic
 
 ## 🚢 Deployment
 

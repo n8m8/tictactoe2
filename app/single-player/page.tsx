@@ -1,85 +1,38 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MainBoard } from '@/components/game/MainBoard'
 import { GameOverlay } from '@/components/game/GameOverlay'
 import { Button } from '@/components/ui/Button'
 import { useGameState } from '@/hooks/useGameState'
-import { AIOpponent, AIDifficulty } from '@/lib/ai-opponent'
-import { isValidMove } from '@/lib/game-rules'
-import type { Player } from '@/types/game'
 
 export default function SinglePlayerPage() {
   const router = useRouter()
-  const [difficulty, setDifficulty] = useState<AIDifficulty | null>(null)
-  const [aiOpponent, setAiOpponent] = useState<AIOpponent | null>(null)
-  const [isAiThinking, setIsAiThinking] = useState(false)
+  const { gameState, dispatch, resetGame } = useGameState('X')
 
-  const myPlayer: Player = 'X'
-  const aiPlayer: Player = 'O'
-
-  const { gameState, dispatch, resetGame } = useGameState(myPlayer)
-
-  // Initialize AI when difficulty is selected
-  useEffect(() => {
-    if (difficulty) {
-      setAiOpponent(new AIOpponent(difficulty, aiPlayer))
-    }
-  }, [difficulty])
-
-  // AI makes a move when it's their turn
-  useEffect(() => {
-    if (
-      gameState.gamePhase === 'playing' &&
-      gameState.currentTurn === aiPlayer &&
-      aiOpponent &&
-      !isAiThinking
-    ) {
-      setIsAiThinking(true)
-
-      // Add a slight delay to make AI feel more natural
-      setTimeout(() => {
-        const move = aiOpponent.getMove(gameState.mainBoard)
-
-        if (move) {
-          dispatch({
-            type: 'MAKE_MOVE',
-            miniGameIndex: move.miniGameIndex,
-            cellIndex: move.cellIndex,
-            player: aiPlayer,
-          })
-        }
-
-        setIsAiThinking(false)
-      }, 500)
-    }
-  }, [gameState, aiOpponent, isAiThinking, aiPlayer, dispatch])
-
-  // Handle player move
+  // Handle move - alternating turns between X and O locally
   const handleMove = (miniGameIndex: number, cellIndex: number) => {
-    if (gameState.currentTurn !== myPlayer || isAiThinking) {
+    if (gameState.gamePhase !== 'playing') {
       return
     }
 
-    const moveValidation = isValidMove(gameState, {
-      seq: gameState.moveHistory.length + 1,
-      player: myPlayer,
-      miniGameIndex: miniGameIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
-      cellIndex: cellIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
-      timestamp: Date.now(),
-      resultingState: 'continue',
-    })
+    // Validate move
+    const moveValidation = {
+      valid:
+        !gameState.mainBoard.miniGames[miniGameIndex].isComplete &&
+        gameState.mainBoard.miniGames[miniGameIndex].cells[cellIndex] === null,
+    }
 
     if (!moveValidation.valid) {
       return
     }
 
+    // Make the move with current turn's player
     dispatch({
       type: 'MAKE_MOVE',
       miniGameIndex,
       cellIndex,
-      player: myPlayer,
+      player: gameState.currentTurn,
     })
   }
 
@@ -93,15 +46,11 @@ export default function SinglePlayerPage() {
       })
     }
 
-    // Reset game (this preserves scores)
-    resetGame('X')
-  }
+    // Determine starting player (alternate from previous game)
+    const startingPlayer = gameState.winner === 'X' ? 'O' : 'X'
 
-  // Handle quit
-  const handleQuit = () => {
-    setDifficulty(null)
-    setAiOpponent(null)
-    resetGame('X')
+    // Reset game (this preserves scores)
+    resetGame(startingPlayer)
   }
 
   // Handle back to menu
@@ -109,75 +58,17 @@ export default function SinglePlayerPage() {
     router.push('/')
   }
 
-  // Difficulty selection screen
-  if (!difficulty) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <h1 className="text-5xl font-marker text-whiteboard-marker-black mb-2">
-              Single Player
-            </h1>
-            <p className="text-lg font-handwritten text-whiteboard-marker-black/70">
-              Choose your difficulty
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <Button
-              onClick={() => setDifficulty('easy')}
-              className="w-full"
-              variant="primary"
-            >
-              Easy - Random Moves
-            </Button>
-
-            <Button
-              onClick={() => setDifficulty('medium')}
-              className="w-full"
-              variant="secondary"
-            >
-              Medium - Defensive Play
-            </Button>
-
-            <Button
-              onClick={() => setDifficulty('hard')}
-              className="w-full"
-              variant="outline"
-            >
-              Hard - Strategic AI
-            </Button>
-          </div>
-
-          <Button onClick={handleBackToMenu} variant="outline" className="w-full">
-            Back to Menu
-          </Button>
-        </div>
-      </main>
-    )
-  }
-
-  // Game screen
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-4xl space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-marker text-whiteboard-marker-black">
-              Single Player
-            </h1>
-            <p className="text-lg font-handwritten text-whiteboard-marker-black/70">
-              Difficulty: {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-            </p>
-          </div>
-
-          {/* AI status */}
-          <div className="text-right">
-            <p className="text-lg font-handwritten text-whiteboard-marker-black/70">
-              {isAiThinking ? '🤔 AI is thinking...' : ''}
-            </p>
-          </div>
+        <div className="text-center">
+          <h1 className="text-4xl font-marker text-whiteboard-marker-black">
+            Local Multiplayer
+          </h1>
+          <p className="text-lg font-handwritten text-whiteboard-marker-black/70">
+            Take turns on the same device
+          </p>
         </div>
 
         {/* Game board */}
@@ -186,18 +77,18 @@ export default function SinglePlayerPage() {
             mainBoard={gameState.mainBoard}
             currentTurn={gameState.currentTurn}
             onMove={handleMove}
-            isPlayable={gameState.gamePhase === 'playing' && !isAiThinking}
+            isPlayable={gameState.gamePhase === 'playing'}
           />
         </div>
 
         {/* Score display */}
         <div className="flex justify-center gap-8 font-handwritten text-lg">
           <div className="text-center">
-            <p className="text-whiteboard-marker-blue">You (X)</p>
+            <p className="text-whiteboard-marker-blue">Player X</p>
             <p className="text-3xl font-marker">{gameState.hostScore}</p>
           </div>
           <div className="text-center">
-            <p className="text-whiteboard-marker-red">AI (O)</p>
+            <p className="text-whiteboard-marker-red">Player O</p>
             <p className="text-3xl font-marker">{gameState.guestScore}</p>
           </div>
           <div className="text-center">
@@ -207,10 +98,7 @@ export default function SinglePlayerPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex justify-center gap-4">
-          <Button onClick={handleQuit} variant="outline">
-            Change Difficulty
-          </Button>
+        <div className="flex justify-center">
           <Button onClick={handleBackToMenu} variant="outline">
             Back to Menu
           </Button>

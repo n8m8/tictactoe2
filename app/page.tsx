@@ -34,7 +34,7 @@ export default function HomePage() {
 
           <Link href="/single-player">
             <Button className="w-full" variant="outline">
-              Single Player
+              Local Multiplayer
             </Button>
           </Link>
 
