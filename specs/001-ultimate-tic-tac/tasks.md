@@ -70,7 +70,7 @@
 - [ ] T085 [P] [US1] Create signaling API endpoint src/app/api/signaling/signal/route.ts (store WebRTC offer/answer/ICE candidates in KV list per session)
 - [ ] T085 [P] [US1] Create signaling API endpoint src/app/api/signaling/poll/route.ts (retrieve pending signals for session since timestamp)
 - [ ] T085 [US1] Create signaling client in src/lib/signaling-client.ts (HTTP functions to call create-room, join-room, signal, poll endpoints)
-- [ ] T085 [US1] Create P2P connection manager in src/lib/p2p-connection.ts (SimplePeer wrapper, connect, send, receive, reconnect logic)
+- [ ] T085 [US1] Create P2P connection manager in src/lib/p2p-connection.ts (SimplePeer wrapper with STUN servers config: stun.l.google.com:19302, connect, send, receive, reconnect logic)
 - [ ] T085 [US1] Create useP2PConnection hook in src/hooks/useP2PConnection.ts (manages WebRTC lifecycle, signaling, connection state)
 - [ ] T085 [US1] Create useGameState hook in src/hooks/useGameState.ts (wraps gameReducer, syncs state over P2P, handles move validation)
 - [ ] T085 [P] [US1] Create MiniGame component in src/components/game/MiniGame.tsx (3x3 grid, click handlers, winner highlight)

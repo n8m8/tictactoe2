@@ -15,7 +15,7 @@ This document consolidates research on WebRTC P2P connections, Next.js 14 App Ro
 
 **Rationale**:
 - Minimal bundle impact: 9KB vs 45KB for PeerJS
-- Handles NAT traversal automatically via STUN/TURN
+- Handles NAT traversal via STUN/TURN (requires explicit config.iceServers configuration)
 - Reliable ordered data channels by default
 - 5M+ weekly npm downloads, battle-tested
 - Simple API reduces implementation complexity
@@ -507,3 +507,38 @@ grid-template-columns: repeat(9, minmax(0, 1fr));
 - Missing this causes console errors and broken animations
 
 **Task Updated**: T006 now explicitly mentions `fadeIn` animation requirement
+
+### WebRTC STUN Server Configuration
+
+**Issue**: WebRTC P2P connections failing with "ICE connection failed" errors
+
+**Root Cause**: SimplePeer requires explicit STUN server configuration for NAT traversal
+- Without STUN servers, ICE negotiation fails
+- WebRTC cannot establish peer connections behind NATs/firewalls
+
+**Fix Applied**:
+```typescript
+// lib/p2p-connection.ts
+this.peer = new SimplePeer({
+  initiator: this.config.isHost,
+  trickle: true,
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+    ],
+  },
+})
+```
+
+**Rationale**:
+- STUN servers help peers discover their public IP addresses
+- Google's public STUN servers are free and reliable
+- Multiple servers provide fallback if one is unavailable
+- Essential for P2P connections to work across different networks
+
+**Impact**: Without this configuration, multiplayer connections fail with:
+- Host: "WebRTC: ICE failed, add a TURN server"
+- Guest: "Cannot set local answer when createAnswer has not been called"
+
+**Task Updated**: T085 (P2P connection manager) now explicitly mentions STUN server configuration

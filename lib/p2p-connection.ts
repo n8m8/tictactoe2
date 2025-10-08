@@ -43,6 +43,12 @@ export class P2PConnection {
       this.peer = new SimplePeer({
         initiator: this.config.isHost,
         trickle: true,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+          ],
+        },
       })
 
       // Set up peer event handlers
@@ -132,6 +138,10 @@ export class P2PConnection {
     // When we have a signal to send to the other peer
     this.peer.on('signal', async (signal) => {
       try {
+        console.log(
+          `[${this.config.isHost ? 'HOST' : 'GUEST'}] Sending signal:`,
+          signal.type
+        )
         await this.signalingClient.sendSignal(
           this.config.joinCode,
           this.config.peerId,
@@ -172,6 +182,10 @@ export class P2PConnection {
     if (!this.peer) return
 
     try {
+      console.log(
+        `[${this.config.isHost ? 'HOST' : 'GUEST'}] Received signal:`,
+        signal.type
+      )
       this.peer.signal(signal)
     } catch (error) {
       console.error('Error handling incoming signal:', error)
