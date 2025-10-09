@@ -37,7 +37,7 @@ class IORedisClient implements RedisClient {
       maxRetriesPerRequest: 3,
       lazyConnect: true, // Don't block on connection
       connectTimeout: 5000,
-      retryStrategy(times) {
+      retryStrategy(times: number) {
         const delay = Math.min(times * 50, 2000)
         return delay
       },

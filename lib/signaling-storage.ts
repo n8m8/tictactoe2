@@ -43,10 +43,8 @@ export async function setRoom(
   data: RoomData
 ): Promise<void> {
   if (useKV && redisClient) {
-    console.log('[Redis] Setting room:', joinCode)
     try {
       await redisClient.set(`room:${joinCode}`, data, { ex: ROOM_TTL })
-      console.log('[Redis] Room set successfully')
     } catch (error) {
       console.error('[Redis] Failed to set room:', error)
       throw error
@@ -61,13 +59,8 @@ export async function setRoom(
  */
 export async function hasRoom(joinCode: string): Promise<boolean> {
   if (useKV && redisClient) {
-    try {
-      const exists = await redisClient.exists(`room:${joinCode}`)
-      return exists === 1
-    } catch (error) {
-      console.error('[Redis] Failed to check room existence:', error)
-      throw error
-    }
+    const exists = await redisClient.exists(`room:${joinCode}`)
+    return exists === 1
   }
   return devRooms.has(joinCode)
 }
