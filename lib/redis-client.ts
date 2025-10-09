@@ -6,7 +6,9 @@
 const hasRestApi = !!(
   process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN
 )
-const hasDirectUrl = !!process.env.KV_URL
+// Support both KV_URL and REDIS_URL (Vercel uses different names)
+const redisUrl = process.env.KV_URL || process.env.REDIS_URL
+const hasDirectUrl = !!redisUrl
 
 export const useKV = hasRestApi || hasDirectUrl
 
@@ -14,7 +16,7 @@ export const useKV = hasRestApi || hasDirectUrl
 if (hasRestApi) {
   console.log('[Storage] Using Vercel KV (REST API)')
 } else if (hasDirectUrl) {
-  console.log('[Storage] Using Redis (direct connection)')
+  console.log('[Storage] Using Redis (direct connection):', redisUrl?.substring(0, 20) + '...')
 } else {
   console.log('[Storage] Using in-memory storage (no Redis configured)')
 }
@@ -119,9 +121,9 @@ let redisClient: RedisClient | null = null
 if (hasRestApi) {
   console.log('[Redis Client] Initializing VercelKVClient')
   redisClient = new VercelKVClient()
-} else if (hasDirectUrl) {
-  console.log('[Redis Client] Initializing IORedisClient')
-  redisClient = new IORedisClient(process.env.KV_URL!)
+} else if (hasDirectUrl && redisUrl) {
+  console.log('[Redis Client] Initializing IORedisClient with', redisUrl.substring(0, 30) + '...')
+  redisClient = new IORedisClient(redisUrl)
 } else {
   console.log('[Redis Client] No Redis configured, using in-memory storage')
 }
