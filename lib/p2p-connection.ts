@@ -218,17 +218,18 @@ export class P2PConnection {
     })
 
     // Log ICE connection state changes
-    if (this.peer._pc) {
-      this.peer._pc.oniceconnectionstatechange = () => {
+    const peerWithPC = this.peer as any
+    if (peerWithPC._pc) {
+      peerWithPC._pc.oniceconnectionstatechange = () => {
         console.log(
           `[${this.config.isHost ? 'HOST' : 'GUEST'}] ICE connection state:`,
-          this.peer?._pc?.iceConnectionState
+          peerWithPC._pc?.iceConnectionState
         )
       }
-      this.peer._pc.onicegatheringstatechange = () => {
+      peerWithPC._pc.onicegatheringstatechange = () => {
         console.log(
           `[${this.config.isHost ? 'HOST' : 'GUEST'}] ICE gathering state:`,
-          this.peer?._pc?.iceGatheringState
+          peerWithPC._pc?.iceGatheringState
         )
       }
     }
