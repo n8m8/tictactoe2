@@ -48,13 +48,21 @@ export class P2PConnection {
           this.config.joinCode,
           this.config.peerId,
           (signal) => this.handleIncomingSignal(signal),
-          () => this.initializePeer(), // Create peer when guest joins
+          () => {
+            this.initializePeer().catch((err) => {
+              console.error('Failed to initialize peer:', err)
+              this.handleError(err)
+            })
+          },
           1000
         )
       } else {
         // Guest: Create peer immediately
         console.log('[GUEST] Creating peer and connecting...')
-        this.initializePeer()
+        this.initializePeer().catch((err) => {
+          console.error('Failed to initialize peer:', err)
+          this.handleError(err)
+        })
 
         // Start polling for signals from host
         this.signalingClient.startPolling(
@@ -70,7 +78,7 @@ export class P2PConnection {
     }
   }
 
-  private initializePeer(): void {
+  private async initializePeer(): Promise<void> {
     if (this.peer) {
       console.log('Peer already initialized')
       return
@@ -80,41 +88,26 @@ export class P2PConnection {
       `[${this.config.isHost ? 'HOST' : 'GUEST'}] Initializing SimplePeer...`
     )
 
+    // Fetch TURN credentials from server
+    let iceServers: RTCIceServer[] = []
+    try {
+      const response = await fetch('/api/turn-credentials')
+      iceServers = await response.json()
+      console.log(`[${this.config.isHost ? 'HOST' : 'GUEST'}] Loaded ${iceServers.length} ICE servers`)
+    } catch (error) {
+      console.error('Failed to fetch TURN credentials, using fallback STUN servers:', error)
+      iceServers = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+      ]
+    }
+
     // Create SimplePeer instance
     this.peer = new SimplePeer({
       initiator: this.config.isHost,
       trickle: true,
       config: {
-        iceServers: [
-          // STUN servers for NAT traversal
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' },
-          { urls: 'stun:stun3.l.google.com:19302' },
-          { urls: 'stun:stun4.l.google.com:19302' },
-          // Numb TURN server (more reliable free option)
-          {
-            urls: 'turn:numb.viagenie.ca',
-            credential: 'muazkh',
-            username: 'webrtc@live.com',
-          },
-          // Metered TURN servers
-          {
-            urls: 'turn:a.relay.metered.ca:80',
-            username: 'openrelayproject',
-            credential: 'openrelayproject',
-          },
-          {
-            urls: 'turn:a.relay.metered.ca:443',
-            username: 'openrelayproject',
-            credential: 'openrelayproject',
-          },
-          {
-            urls: 'turn:a.relay.metered.ca:443?transport=tcp',
-            username: 'openrelayproject',
-            credential: 'openrelayproject',
-          },
-        ],
+        iceServers,
         iceTransportPolicy: 'all', // Try all connection methods
       },
     })
