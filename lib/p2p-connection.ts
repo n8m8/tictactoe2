@@ -26,6 +26,8 @@ export class P2PConnection {
   private signalingClient: SignalingClient
   private config: P2PConnectionConfig
   private status: ConnectionStatus = 'disconnected'
+  private signalQueue: any[] = []
+  private isProcessingQueue = false
 
   constructor(config: P2PConnectionConfig) {
     this.config = config
@@ -173,25 +175,10 @@ export class P2PConnection {
     if (!this.peer) return
 
     // When we have a signal to send to the other peer
-    this.peer.on('signal', async (signal) => {
-      try {
-        const signalType = signal.type || (signal.candidate ? 'candidate' : 'unknown')
-        console.log(
-          `[${this.config.isHost ? 'HOST' : 'GUEST'}] Sending signal:`,
-          signalType
-        )
-        await this.signalingClient.sendSignal(
-          this.config.joinCode,
-          this.config.peerId,
-          signal
-        )
-        console.log(
-          `[${this.config.isHost ? 'HOST' : 'GUEST'}] Signal sent successfully:`,
-          signalType
-        )
-      } catch (error) {
-        console.error('Error sending signal:', error)
-      }
+    this.peer.on('signal', (signal) => {
+      // Queue signals to prevent concurrent writes
+      this.signalQueue.push(signal)
+      this.processSignalQueue()
     })
 
     // When the connection is established
@@ -242,6 +229,37 @@ export class P2PConnection {
   private updateStatus(status: ConnectionStatus): void {
     this.status = status
     this.config.onStatusChange(status)
+  }
+
+  private async processSignalQueue(): Promise<void> {
+    if (this.isProcessingQueue || this.signalQueue.length === 0) return
+
+    this.isProcessingQueue = true
+
+    while (this.signalQueue.length > 0) {
+      const signal = this.signalQueue.shift()
+      try {
+        const signalType =
+          signal.type || (signal.candidate ? 'candidate' : 'unknown')
+        console.log(
+          `[${this.config.isHost ? 'HOST' : 'GUEST'}] Sending signal:`,
+          signalType
+        )
+        await this.signalingClient.sendSignal(
+          this.config.joinCode,
+          this.config.peerId,
+          signal
+        )
+        console.log(
+          `[${this.config.isHost ? 'HOST' : 'GUEST'}] Signal sent successfully:`,
+          signalType
+        )
+      } catch (error) {
+        console.error('Error sending signal:', error)
+      }
+    }
+
+    this.isProcessingQueue = false
   }
 
   private handleError(error: Error): void {

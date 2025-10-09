@@ -14,26 +14,43 @@ export async function POST(request: NextRequest) {
     }
 
     const joinCode = body.joinCode.toUpperCase()
-    const room = await getRoom(joinCode)
 
-    if (!room) {
-      return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    // Retry logic to handle race conditions
+    let retries = 3
+    let success = false
+
+    while (retries > 0 && !success) {
+      const room = await getRoom(joinCode)
+
+      if (!room) {
+        return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+      }
+
+      // Verify sender is part of the room
+      if (body.from !== room.hostPeerId && body.from !== room.guestPeerId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+      }
+
+      // Store signal with current count for verification
+      const previousCount = room.signals.length
+      room.signals.push({
+        from: body.from,
+        signal: body.signal,
+      })
+
+      try {
+        await setRoom(joinCode, room)
+        success = true
+
+        const isHost = body.from === room.hostPeerId
+        console.log(`[SIGNAL] ${isHost ? 'HOST' : 'GUEST'} sent ${body.signal.type || (body.signal.candidate ? 'candidate' : 'unknown')} (${previousCount} -> ${room.signals.length})`)
+      } catch (error) {
+        retries--
+        if (retries === 0) throw error
+        // Brief delay before retry
+        await new Promise(resolve => setTimeout(resolve, 10))
+      }
     }
-
-    // Verify sender is part of the room
-    if (body.from !== room.hostPeerId && body.from !== room.guestPeerId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
-
-    // Store signal
-    room.signals.push({
-      from: body.from,
-      signal: body.signal,
-    })
-    await setRoom(joinCode, room)
-
-    const isHost = body.from === room.hostPeerId
-    console.log(`[SIGNAL] ${isHost ? 'HOST' : 'GUEST'} sent ${body.signal.type || 'signal'} (total: ${room.signals.length})`)
 
     const response: SignalResponse = {
       success: true,

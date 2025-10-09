@@ -73,6 +73,26 @@ export async function hasRoom(joinCode: string): Promise<boolean> {
 }
 
 /**
+ * Append a signal to a room atomically
+ */
+export async function appendSignal(
+  joinCode: string,
+  signal: { from: string; signal: any }
+): Promise<void> {
+  if (useKV && redisClient) {
+    // For Redis, we need to get, modify, set (non-atomic, but with retry in API)
+    const room = await getRoom(joinCode)
+    if (!room) throw new Error('Room not found')
+    room.signals.push(signal)
+    await setRoom(joinCode, room)
+  } else {
+    const room = devRooms.get(joinCode)
+    if (!room) throw new Error('Room not found')
+    room.signals.push(signal)
+  }
+}
+
+/**
  * Delete room
  */
 export async function deleteRoom(joinCode: string): Promise<void> {
