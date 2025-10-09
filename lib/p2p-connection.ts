@@ -222,10 +222,21 @@ export class P2PConnection {
     const peerWithPC = this.peer as any
     if (peerWithPC._pc) {
       peerWithPC._pc.oniceconnectionstatechange = () => {
+        const state = peerWithPC._pc?.iceConnectionState
         console.log(
           `[${this.config.isHost ? 'HOST' : 'GUEST'}] ICE connection state:`,
-          peerWithPC._pc?.iceConnectionState
+          state
         )
+
+        // If ICE connects, mark as connected (SimplePeer 'connect' event sometimes doesn't fire)
+        if (state === 'connected' || state === 'completed') {
+          console.log(
+            `[${this.config.isHost ? 'HOST' : 'GUEST'}] WebRTC connection established via ICE state!`
+          )
+          this.updateStatus('connected')
+        } else if (state === 'failed' || state === 'disconnected' || state === 'closed') {
+          this.updateStatus('failed')
+        }
       }
       peerWithPC._pc.onicegatheringstatechange = () => {
         console.log(
