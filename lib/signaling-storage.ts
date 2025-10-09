@@ -30,7 +30,8 @@ if (!useKV) {
  */
 export async function getRoom(joinCode: string): Promise<RoomData | null> {
   if (useKV && redisClient) {
-    return await redisClient.get<RoomData>(`room:${joinCode}`)
+    const room = await redisClient.get<RoomData>(`room:${joinCode}`)
+    return room
   }
   return devRooms.get(joinCode) ?? null
 }
@@ -44,7 +45,9 @@ export async function setRoom(
 ): Promise<void> {
   if (useKV && redisClient) {
     try {
+      console.log(`[Storage] Setting room in Redis: room:${joinCode}, TTL: ${ROOM_TTL}s, signals: ${data.signals.length}`)
       await redisClient.set(`room:${joinCode}`, data, { ex: ROOM_TTL })
+      console.log(`[Storage] Room set successfully: room:${joinCode}`)
     } catch (error) {
       console.error('[Redis] Failed to set room:', error)
       throw error

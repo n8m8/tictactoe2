@@ -13,6 +13,7 @@ function generateJoinCode(): string {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[CREATE-ROOM] Request received')
     const body = (await request.json()) as CreateRoomRequest
 
     if (!body.hostPeerId) {
@@ -29,11 +30,18 @@ export async function POST(request: NextRequest) {
     } while (await hasRoom(joinCode))
 
     // Create room
-    await setRoom(joinCode, {
+    const roomData = {
       hostPeerId: body.hostPeerId,
       signals: [],
       createdAt: Date.now(),
-    })
+    }
+
+    console.log(`[CREATE-ROOM] Creating room ${joinCode} for host ${body.hostPeerId}`)
+    await setRoom(joinCode, roomData)
+
+    // Verify room was created
+    const verifyRoom = await hasRoom(joinCode)
+    console.log(`[CREATE-ROOM] Room ${joinCode} exists after creation: ${verifyRoom}`)
 
     const response: CreateRoomResponse = {
       joinCode,

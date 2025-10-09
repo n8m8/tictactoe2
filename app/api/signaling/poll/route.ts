@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     const room = await getRoom(joinCode)
 
     if (!room) {
+      console.error(`[POLL] Room not found: ${joinCode}`)
       return NextResponse.json({ error: 'Room not found' }, { status: 404 })
     }
 

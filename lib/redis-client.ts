@@ -117,9 +117,13 @@ class VercelKVClient implements RedisClient {
 let redisClient: RedisClient | null = null
 
 if (hasRestApi) {
+  console.log('[Redis Client] Initializing VercelKVClient')
   redisClient = new VercelKVClient()
 } else if (hasDirectUrl) {
+  console.log('[Redis Client] Initializing IORedisClient')
   redisClient = new IORedisClient(process.env.KV_URL!)
+} else {
+  console.log('[Redis Client] No Redis configured, using in-memory storage')
 }
 
 export { redisClient }
