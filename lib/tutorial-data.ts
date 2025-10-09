@@ -30,19 +30,6 @@ Click any available cell in the highlighted mini-game to make your move.`,
     highlight: 'The first move can be made in ANY mini-game!',
   },
   {
-    title: 'The Special Rule',
-    description: `Here's where it gets interesting:
-
-The mini-game where you place your mark determines where your opponent must play next!
-
-For example:
-• If you mark the top-right cell of a mini-game
-• Your opponent MUST play in the top-right mini-game
-
-If that mini-game is already won or full, they can play anywhere!`,
-    highlight: 'Use this rule strategically to control where your opponent can play!',
-  },
-  {
     title: 'Winning Mini-Games',
     description: `To win a mini-game, get 3 in a row within that mini-game (just like regular tic-tac-toe).
 

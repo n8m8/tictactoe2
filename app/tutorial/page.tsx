@@ -61,13 +61,12 @@ export default function TutorialPage() {
           </div>
         )
       case 2: // Making Moves
-      case 3: // Special Rule
         return (
           <div className="max-w-xs mx-auto">
             <MiniGame miniGame={demoMiniGame} isActive={true} isPlayable={false} />
           </div>
         )
-      case 4: // Winning Mini-Games
+      case 3: // Winning Mini-Games
         return (
           <div className="flex justify-center gap-8">
             <div className="text-center space-y-2">
