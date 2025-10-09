@@ -86,8 +86,11 @@ export class P2PConnection {
       trickle: true,
       config: {
         iceServers: [
+          // STUN servers
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          // Multiple TURN server options for reliability
           {
             urls: 'turn:openrelay.metered.ca:80',
             username: 'openrelayproject',
@@ -98,7 +101,13 @@ export class P2PConnection {
             username: 'openrelayproject',
             credential: 'openrelayproject',
           },
+          {
+            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject',
+          },
         ],
+        iceTransportPolicy: 'all', // Try all connection methods
       },
     })
 
@@ -183,6 +192,7 @@ export class P2PConnection {
 
     // When the connection is established
     this.peer.on('connect', () => {
+      console.log(`[${this.config.isHost ? 'HOST' : 'GUEST'}] WebRTC connection established!`)
       this.updateStatus('connected')
     })
 
@@ -198,6 +208,7 @@ export class P2PConnection {
 
     // When the connection is closed
     this.peer.on('close', () => {
+      console.log(`[${this.config.isHost ? 'HOST' : 'GUEST'}] Connection closed`)
       this.updateStatus('disconnected')
     })
 
@@ -205,6 +216,22 @@ export class P2PConnection {
     this.peer.on('error', (error) => {
       this.handleError(error)
     })
+
+    // Log ICE connection state changes
+    if (this.peer._pc) {
+      this.peer._pc.oniceconnectionstatechange = () => {
+        console.log(
+          `[${this.config.isHost ? 'HOST' : 'GUEST'}] ICE connection state:`,
+          this.peer?._pc?.iceConnectionState
+        )
+      }
+      this.peer._pc.onicegatheringstatechange = () => {
+        console.log(
+          `[${this.config.isHost ? 'HOST' : 'GUEST'}] ICE gathering state:`,
+          this.peer?._pc?.iceGatheringState
+        )
+      }
+    }
   }
 
   private handleIncomingSignal(signal: any): void {

@@ -2,8 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   compiler: {
-    // Temporarily disabled to debug KV issues
-    // removeConsole: process.env.NODE_ENV === 'production',
+    // Keep console logs for WebRTC debugging
+    removeConsole: false,
   },
   images: {
     formats: ['image/avif', 'image/webp'],
