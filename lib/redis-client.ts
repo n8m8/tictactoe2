@@ -88,12 +88,12 @@ class VercelKVClient implements RedisClient {
   private kv: any
 
   constructor() {
-    const { kv } = require('@vercel/kv')
-    this.kv = kv
+    const kvModule = require('@vercel/kv')
+    this.kv = kvModule.kv
   }
 
   async get<T>(key: string): Promise<T | null> {
-    return await this.kv.get<T>(key)
+    return await this.kv.get(key) as T | null
   }
 
   async set(
